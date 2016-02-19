@@ -33,25 +33,14 @@ function iterm.image(img, opts)
       if imgDisplay:dim() == 2 then 
 	 imgDisplay = imgDisplay:view(1, imgDisplay:size(1), imgDisplay:size(2))
       end
-      local tmp = os.tmpname() .. '.png'
-      image.save(tmp, imgDisplay)
       -------------------------------------------------------------
-      -- load the image back as binary blob
-      local f = assert(torch.DiskFile(tmp,'r',true)):binary();
-      f:seekEnd();
-      local size = f:position()-1
-      f:seek(1)
-      local buf = torch.CharStorage(size);
-      assert(f:readChar(buf) == size, 'wrong number of bytes read')
-      f:close()
-      os.execute('rm -f ' .. tmp)
-      ------------------------------------------------------------
-      local enc = base64.encode(ffi.string(torch.data(buf), size))
+      local compressed = image.compressJPG(imgDisplay)
+      local size = compressed:numel()*ffi.sizeof'long'
+      local enc = base64.encode(ffi.string(compressed:data(), size))
 
       print_osc()
 
-      io.write'1337;File='
-      io.write('name='..base64.encode(tmp)..';')
+      io.write('1337;File=')
       io.write('size='..size..';')
       io.write('inline=1:')
       io.write(enc)
