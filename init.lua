@@ -22,11 +22,34 @@ local function print_st()
    end
 end
 
+local function getBase64FromFile(filename)
+   -- load the image back as binary blob
+   local f = assert(torch.DiskFile(filename,'r',true)):binary();
+   f:seekEnd();
+   local size = f:position()-1
+   f:seek(1)
+   local buf = torch.CharStorage(size);
+   assert(f:readChar(buf) == size, 'wrong number of bytes read')
+   f:close()
+   local enc = base64.encode(ffi.string(torch.data(buf), size))
+   return enc, size
+end
+
+local function display(filename)
+   local enc, size = getBase64FromFile(filename)
+   print_osc()
+   io.write'1337;File='
+   io.write('name='..base64.encode(filename)..';')
+   io.write('size='..size..';')
+   io.write('inline=1:')
+   io.write(enc)
+   print_st()
+end
+
 function iterm.image(img, opts)
    if torch.type(img) == 'string' then -- assume that it is path
-      img = image.load(img, 3) -- TODO: revamp this to just directly load the blob, infer file prefix, and send.
-   end
-   if torch.isTensor(img) or torch.type(img) == 'table' then
+      display(img)
+   elseif torch.isTensor(img) or torch.type(img) == 'table' then
       opts = opts or {padding=2}
       opts.input = img
       local imgDisplay = image.toDisplayTensor(opts)
@@ -35,28 +58,8 @@ function iterm.image(img, opts)
       end
       local tmp = os.tmpname() .. '.png'
       image.save(tmp, imgDisplay)
-      -------------------------------------------------------------
-      -- load the image back as binary blob
-      local f = assert(torch.DiskFile(tmp,'r',true)):binary();
-      f:seekEnd();
-      local size = f:position()-1
-      f:seek(1)
-      local buf = torch.CharStorage(size);
-      assert(f:readChar(buf) == size, 'wrong number of bytes read')
-      f:close()
+      display(tmp)
       os.execute('rm -f ' .. tmp)
-      ------------------------------------------------------------
-      local enc = base64.encode(ffi.string(torch.data(buf), size))
-
-      print_osc()
-
-      io.write'1337;File='
-      io.write('name='..base64.encode(tmp)..';')
-      io.write('size='..size..';')
-      io.write('inline=1:')
-      io.write(enc)
-
-      print_st()
    else
       error('unhandled type in iterm.image:' .. torch.type(img))
    end
