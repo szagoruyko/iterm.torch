@@ -5,6 +5,7 @@ local iterm = {}
 require 'image'
 local base64 = require 'base64'
 local ffi = require 'ffi'
+require 'graph'
 
 local function print_osc()
    if os.getenv'TERM' == 'screen' then
@@ -46,7 +47,11 @@ local function display(filename)
    print_st()
 end
 
-function iterm.image(img, opts)
+-- Generic display function.
+-- If given path, shows it's base64 encoding, so can handle JPG, PNG, PDF, etc.
+-- If given torch tensor, calls image.toDisplay, saves the output to disk and
+-- calls display function above
+function iterm.display(img, opts)
    if torch.type(img) == 'string' then -- assume that it is path
       display(img)
    elseif torch.isTensor(img) or torch.type(img) == 'table' then
@@ -63,6 +68,30 @@ function iterm.image(img, opts)
    else
       error('unhandled type in iterm.image:' .. torch.type(img))
    end
+end
+
+iterm.image = iterm.display
+
+-- see `man dot` for all preferences
+local default_attr = {
+   color = 'yellow',
+   style = 'filled',
+   shape = 'box',
+   fontsize = 10,
+}
+
+-- as default rendering is not pretty we set our own graphNodeAttributes
+-- if they are not set already
+-- mutates the graph!
+function iterm.dot(g,fname,attr)
+   attr = attr or default_attr
+   local f = function() return attr end
+   for i,v in ipairs(g.nodes) do
+      if v.data and not v.graphNodeAttributes then v.graphNodeAttributes = f end
+   end
+   fname = fname or os.tmpname()..'.pdf'
+   graph.graphvizFile(g, 'dot', fname)
+   display(fname)
 end
 
 return iterm
