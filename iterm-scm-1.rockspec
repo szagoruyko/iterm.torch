@@ -23,5 +23,7 @@ build = {
    type = "builtin",
    modules = {
       ['iterm.init'] = 'init.lua',
+      ['iterm.env'] = 'env.lua',
+      ['iterm.dot'] = 'dot.lua',
    }
 }

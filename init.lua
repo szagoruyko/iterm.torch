@@ -1,7 +1,7 @@
 -- For explanation see https://iterm2.com/images.html
 -- 2016 Sergey Zagoruyko
 
-local iterm = {}
+local iterm = require 'iterm.env'
 require 'image'
 local base64 = require 'base64'
 local ffi = require 'ffi'
@@ -46,7 +46,11 @@ local function display(filename)
    print_st()
 end
 
-function iterm.image(img, opts)
+-- Generic display function.
+-- If given path, shows it's base64 encoding, so can handle JPG, PNG, PDF, etc.
+-- If given torch tensor, calls image.toDisplay, saves the output to disk and
+-- calls display function above
+function iterm.display(img, opts)
    if torch.type(img) == 'string' then -- assume that it is path
       display(img)
    elseif torch.isTensor(img) or torch.type(img) == 'table' then
@@ -64,5 +68,7 @@ function iterm.image(img, opts)
       error('unhandled type in iterm.image:' .. torch.type(img))
    end
 end
+
+iterm.image = iterm.display
 
 return iterm
