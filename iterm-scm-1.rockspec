@@ -25,5 +25,6 @@ build = {
       ['iterm.init'] = 'init.lua',
       ['iterm.env'] = 'env.lua',
       ['iterm.dot'] = 'dot.lua',
+      ['iterm.gnuplot'] = 'gnuplot.lua',
    }
 }
