@@ -1,11 +1,10 @@
 -- For explanation see https://iterm2.com/images.html
 -- 2016 Sergey Zagoruyko
 
-local iterm = {}
+local iterm = require 'iterm.env'
 require 'image'
 local base64 = require 'base64'
 local ffi = require 'ffi'
-require 'graph'
 
 local function print_osc()
    if os.getenv'TERM' == 'screen' then
@@ -71,27 +70,5 @@ function iterm.display(img, opts)
 end
 
 iterm.image = iterm.display
-
--- see `man dot` for all preferences
-local default_attr = {
-   color = 'yellow',
-   style = 'filled',
-   shape = 'box',
-   fontsize = 10,
-}
-
--- as default rendering is not pretty we set our own graphNodeAttributes
--- if they are not set already
--- mutates the graph!
-function iterm.dot(g,fname,attr)
-   attr = attr or default_attr
-   local f = function() return attr end
-   for i,v in ipairs(g.nodes) do
-      if v.data and not v.graphNodeAttributes then v.graphNodeAttributes = f end
-   end
-   fname = fname or os.tmpname()..'.pdf'
-   graph.graphvizFile(g, 'dot', fname)
-   display(fname)
-end
 
 return iterm
