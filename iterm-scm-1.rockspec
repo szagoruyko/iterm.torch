@@ -7,15 +7,14 @@ source = {
 
 description = {
    summary = "Extra Lua functions.",
-   detailed = [[
-Display images directly in iTerm2. Version 2.9 or higher is required.
-   ]],
+   detailed = "Display images directly in iTerm2",
    homepage = "https://github.com/szagoruyko/iterm.torch",
    license = "BSD"
 }
 
 dependencies = {
    "torch >= 7.0",
+   "lbase64",
    "image",
 }
 
